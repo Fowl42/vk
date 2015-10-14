@@ -1,4 +1,6 @@
-﻿namespace VkNet
+﻿using System.Threading.Tasks;
+
+namespace VkNet
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -257,30 +259,13 @@
             if (OnTokenExpires != null)
                 OnTokenExpires(this);
         }
-#if false
+
         // todo refactor this shit
-        internal async Task<VkResponse> CallAsync(string methodName, VkParameters parameters, bool skipAuthorization = false)
+        internal async Task<VkResponse> CallAsync(string methodName, VkParameters parameters, bool skipAuthorization = false, string apiVersion = null)
         {
-            if (!skipAuthorization)
-                IfNotAuthorizedThrowException();
-
-            string url = GetApiUrl(methodName, parameters);
-
-            string answer = await Browser.GetJsonAsync(url);
-
-#if DEBUG
-            Trace.WriteLine(Utilities.PreetyPrintApiUrl(url));
-            Trace.WriteLine(Utilities.PreetyPrintJson(answer));
-#endif
-            VkErrors.IfErrorThrowException(answer);
-
-            JObject json = JObject.Parse(answer);
-
-            var rawResponse = json["response"];
-
-            return new VkResponse(rawResponse) { RawJson = answer };
+            return await Task.Run(() => Call(methodName, parameters, skipAuthorization, apiVersion));
         }
-#endif
+
         
 		[MethodImpl(MethodImplOptions.NoInlining)]
 	    internal VkResponse Call(string methodName, VkParameters parameters, bool skipAuthorization = false, string apiVersion = null)
